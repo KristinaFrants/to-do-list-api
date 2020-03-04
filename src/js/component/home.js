@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 export function Home() {
 	const [todos, setTodos] = useState([]);
 
-	const [value, setValue] = useState("");
+	const [values, setValues] = useState("");
 	const api = "https://assets.breatheco.de/apis/fake/todos/user/Kfrants";
 	useEffect(() => {
 		syncAPI();
@@ -28,14 +28,14 @@ export function Home() {
 	}
 
 	const onValueChange = ({ target: { value } }) => {
-		setValue(value);
+		setValues(value);
 	};
 
 	const Todo = ({ todo, handleCheckboxChange, deleteTodo }) => (
 		<li key={todo.id}>
 			<input
 				type="checkbox"
-				checked={todo.status}
+				checked={todo.done}
 				onChange={() => handleCheckboxChange(todo)}
 			/>
 			<label>{todo.label}</label>
@@ -45,23 +45,45 @@ export function Home() {
 		</li>
 	);
 
-	const addTodo = () => {
-		if (value !== "") {
+	const addTodo = item => {
+		console.log("label", item);
+		if (item !== "") {
 			setTodos([
 				...todos,
 				{
-					name: value,
-					status: false,
+					label: item,
+					done: false,
 					id: Date.now() + Math.random()
 				}
 			]);
-			setValue("");
+			setValues("");
 		}
+		console.log("Todos", todos);
+		fetch(api, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(todos)
+		}).then(response => {
+			if (!response.ok) {
+				throw Error(response.text);
+			}
+
+			return response.json();
+		});
+		// .then(data => {
+		// 	// Resync our local component with API data
+		// 	syncAPI();
+		// })
+		// .catch(error => {
+		// 	console.error(error);
+		// });
 	};
 
 	const handleKeyPress = ({ key }) => {
 		if (key === "Enter") {
-			addTodo();
+			// addTodo();
 
 			fetch(api, {
 				method: "PUT",
@@ -70,7 +92,7 @@ export function Home() {
 				},
 				body: JSON.stringify([
 					...todos,
-					{ label: setValue, done: false }
+					{ label: setValues, done: false }
 				])
 			})
 				.then(response => {
@@ -101,15 +123,38 @@ export function Home() {
 		);
 	};
 
-	const deleteTodo = id => {
-		setTodos(
-			todos.filter(
-				todo =>
-					todo.id != id.id ? (id.done = true) : (id.done = false)
-			)
-		);
-		// setTodos(todos.filter(todo => todo.id !== id.id ));
-		console.log(todos);
+	const deleteTodo = bubu => {
+		let newTodo = todos.filter((item, index) => index != bubu);
+		console.log("delete", newTodo);
+		fetch(api, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(newTodo)
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw Error(response.text);
+				}
+
+				return response.json();
+			})
+			.then(data => {
+				// Resync our local component with API data
+				syncAPI();
+			})
+			.catch(error => {
+				console.error(error);
+			});
+		// setTodos(
+		// 	todos.filter(
+		// 		todo =>
+		// 			todo.id != id.id ? (id.done = true) : (id.done = false)
+		// 	)
+		// );
+		// // setTodos(todos.filter(todo => todo.id !== id.id ));
+		// console.log(todos);
 	};
 
 	return (
@@ -119,22 +164,22 @@ export function Home() {
 				<input
 					id="new-task"
 					type="text"
-					value={value}
+					// value={values}
 					name="todoField"
-					onKeyDown={handleKeyPress}
-					onChange={onValueChange}
+					// onKeyDown={handleKeyPress}
+					onChange={e => setValues(e.target.value)}
 				/>
-				<button onClick={addTodo}>Add</button>
+				<button onClick={() => addTodo(values)}>Add</button>
 			</p>
 
 			<h3>Todo</h3>
 			<ul id="incomplete-tasks">
-				{todos.filter(todo => !todo.status).map(todo => (
+				{todos.filter(todo => !todo.status).map((todo, i) => (
 					<Todo
 						key={todo.id}
 						todo={todo}
 						handleCheckboxChange={handleCheckboxChange}
-						deleteTodo={() => deleteTodo(todo)}
+						deleteTodo={() => deleteTodo(i)}
 					/>
 				))}
 			</ul>
