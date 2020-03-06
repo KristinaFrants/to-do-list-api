@@ -44,27 +44,13 @@ export function Home() {
 			</button>
 		</li>
 	);
-
-	const addTodo = item => {
-		console.log("label", item);
-		if (item !== "") {
-			setTodos([
-				...todos,
-				{
-					label: item,
-					done: false,
-					id: Date.now() + Math.random()
-				}
-			]);
-			setValues("");
-		}
-		console.log("Todos", todos);
+	const test = bubu => {
 		fetch(api, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify(todos)
+			body: JSON.stringify(bubu)
 		}).then(response => {
 			if (!response.ok) {
 				throw Error(response.text);
@@ -72,13 +58,17 @@ export function Home() {
 
 			return response.json();
 		});
-		// .then(data => {
-		// 	// Resync our local component with API data
-		// 	syncAPI();
-		// })
-		// .catch(error => {
-		// 	console.error(error);
-		// });
+	};
+
+	const addTodo = item => {
+		setTodos([
+			...todos,
+			{
+				label: values,
+				done: false
+			}
+		]);
+		setTimeout(() => test(), 3000);
 	};
 
 	const handleKeyPress = ({ key }) => {
@@ -170,6 +160,7 @@ export function Home() {
 					onChange={e => setValues(e.target.value)}
 				/>
 				<button onClick={() => addTodo(values)}>Add</button>
+				<button onClick={() => test(todos)}>Add</button>
 			</p>
 
 			<h3>Todo</h3>
